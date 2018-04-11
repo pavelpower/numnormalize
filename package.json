@@ -23,5 +23,7 @@
   "bugs": {
     "url": "https://github.com/pavelpower/numnormalize/issues"
   },
-  "homepage": "https://github.com/pavelpower/numnormalize#readme"
+  "homepage": "https://github.com/pavelpower/numnormalize#readme",
+  "dependencies": {},
+  "devDependencies": {}
 }
