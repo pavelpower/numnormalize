@@ -1,0 +1,27 @@
+{
+  "name": "numnormalize",
+  "version": "1.0.0",
+  "description": "functions of the normalization of numerical data for the training of neural networks",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pavelpower/numnormalize.git"
+  },
+  "keywords": [
+    "normalize",
+    "brain.js",
+    "linear",
+    "normalization",
+    "nonlinear",
+    "normalization"
+  ],
+  "author": "Pavel Akhmetchanov <p.akhmetchanov@tinkoff.ru> (http://tinkoff.ru)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pavelpower/numnormalize/issues"
+  },
+  "homepage": "https://github.com/pavelpower/numnormalize#readme"
+}
