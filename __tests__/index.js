@@ -1,4 +1,4 @@
-const { linearNormalize, nonLinearNormalize } = require('../index');
+const { linearNormalize, nonLinearNormalize, linearDeNormalize, nonLinearDeNormalize } = require('../index');
 
 const data = [
     [ 0,     1,     2,        3,     4],
@@ -16,6 +16,14 @@ describe('numNormolize', () => {
 
     test('exists nonLinearNormalize', () => {
         expect(typeof nonLinearNormalize).toBe('function');
+    });
+
+    test('exists linearDeNormalize', () => {
+        expect(typeof linearDeNormalize).toBe('function');
+    });
+
+    test('exists nonLinearDeNormalize', () => {
+        expect(typeof nonLinearDeNormalize).toBe('function');
     });
 
     test('linearNormalize', () => {
@@ -116,6 +124,34 @@ describe('numNormolize', () => {
             [0.5234, 0.5177, 0.5162,   0.52, 0.5173],
             [0.5163, 0.5162, 0.5163, 0.5194, 0.5234]
         ]);
+    });
+
+    test('nonLinearDeNormalize by Col', () => {
+        let outputNorm = nonLinearNormalize({
+            data,
+            isCol: true
+        });
+
+        let outputDeNorm = nonLinearDeNormalize({
+            data: outputNorm,
+            isCol: true
+        });
+
+        expect(data).toEqual(outputDeNorm);
+    });
+
+    test('linearDeNormalize by Col', () => {
+        let outputNorm = linearNormalize({
+            data,
+            isCol: true
+        });
+
+        let outputDeNorm = linearDeNormalize({
+            data: outputNorm,
+            isCol: true
+        });
+
+        expect(data).toEqual(outputDeNorm);
     });
 
 });

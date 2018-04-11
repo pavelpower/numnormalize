@@ -3,7 +3,6 @@
  * Linear normalization of data for learning a neural network
  * the data of one parameter is the STRING or COLUMN (param isCol) of the matrix
  *
- * @function nonLinear.normalize
  * @param data {Array<Array{Number}>} - matrix of numbers
  * @param isCol {boolean} - Normalization by row (false) or by column (true). default by row (isCol = false)
  * default: normalizeInput
@@ -13,6 +12,27 @@ function linearNormalize({ data, isCol = false }) {
         let j = jMax;
         while(j >= 0) {
             vector[j] = (vector[j] - min)/(max - min);
+            j--;
+        }
+    };
+
+    enumeration(data, isCol, callback);
+
+    return data;
+}
+
+/**
+ * Linear denormalization of data for learning a neural network
+ * the data of one parameter is the STRING or COLUMN (param isCol) of the matrix
+ *
+ * @param data {Array<Array{Number}>} - matrix of numbers
+ * @param isCol {boolean} - denormalization by row (false) or by column (true). default by row (isCol = false)
+ */
+function linearDeNormalize({ data, isCol = false }) {
+    const callback = ({ max, min, vector, jMax }) => {
+        let j = jMax;
+        while(j >= 0) {
+            vector[j] = min + vector[j] * (max - min);
             j--;
         }
     };
@@ -33,8 +53,7 @@ function linearNormalize({ data, isCol = false }) {
  * @function nonLinear.normalize
  * @param data {Array<Array{Number}>} - matrix of numbers
  * @param a {number} - parameter determining the degree of nonlinearity, default: 1
- * @param isCol {boolean} - Normalization by row (false) or by column (true). default by row (isCol = false)
- * default: normalizeInput
+ * @param isCol {boolean} - normalization by row (false) or by column (true). default by row (isCol = false)
  */
 function nonLinearNormalize({ data, a = 1, isCol = false }) {
     const callback = ({ max, min, vector, jMax }) => {
@@ -42,6 +61,33 @@ function nonLinearNormalize({ data, a = 1, isCol = false }) {
         let middle = (max - min) / 2;
         while(j >= 0) {
             vector[j] = 1 / (Math.exp(a * middle - a * vector[j]) + 1);
+            j--;
+        }
+    };
+
+    enumeration(data, isCol, callback);
+
+    return data;
+}
+
+/**
+ * Non-linear denormalization of data for learning a neural network
+ * the data of one parameter is the STRING or COLUMN (param isCol) of the matrix
+ *
+ * The parameter "a" affects the degree of non-linearity of the variable change in the normalized interval.
+ * In addition, when using the values a < 0.5, there is no need to additionally
+ * specify the width of the extrapolation corridor.
+ *
+ * @param data {Array<Array{Number}>} - matrix of numbers
+ * @param a {number} - parameter determining the degree of nonlinearity, default: 1
+ * @param isCol {boolean} - denormalization by row (false) or by column (true). default by row (isCol = false)
+ */
+function nonLinearDeNormalize({ data, a = 1, isCol = false }) {
+    const callback = ({ max, min, vector, jMax }) => {
+        let j = jMax;
+        let middle = (max - min) / 2;
+        while(j >= 0) {
+            vector[j] = middle - (1/a) * Math.log(1/vector[j] -1);
             j--;
         }
     };
@@ -88,5 +134,7 @@ function enumeration(data, isCol = false, callback) {
 
 module.exports = {
     linearNormalize,
-    nonLinearNormalize
+    linearDeNormalize,
+    nonLinearNormalize,
+    nonLinearDeNormalize
 };
