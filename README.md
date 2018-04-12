@@ -3,7 +3,7 @@
 # Instalation
 
 ```
-$ npm install numnormolize --save
+$ npm i numnormalize --save
 ```
 
 The need for the normalization of data samples is conditioned by the very nature of the variables used
@@ -22,8 +22,8 @@ The most common way to normalize input and output variables is linear normalizat
 Example:
 ```
 const brain = require('brain.js');
-const net = new brain.recurrent.RNN();
-const { linearNormalize, linearDeNormalize } = require('numnormolize');
+const net = new brain.NeuralNetwork();
+const { linearNormalize, linearDeNormalize, getMaxMin } = require('../index');
 
 const inputData = [
     [ 0,     1,     2,        3,     4],
@@ -33,28 +33,42 @@ const inputData = [
     [ 1, -0.12,  2.32,    54.24, 123.1]
 ];
 
-const outputData = [
-    [102],
-    [35],
-    [56],
-    [43],
-    [84]
-];
+const outputData = [[
+    102,
+     35,
+     56,
+     43,
+     84
+]];
 
-const normInput = linearNormalize({ data: inputData, isCol: true });
-const normOutput = linearNormalize({ data: inputData, isCol: true})
+const maxminInput = getMaxMin(inputData);
+const maxminOutput = getMaxMin(outputData);
 
-const trainData = inputData.forEach((row, i) => ({
+const normInput = linearNormalize({ data: inputData, maxmin: maxminInput });
+const normOutput = linearNormalize({ data: outputData, maxmin: maxminOutput });
+
+const trainData = normInput.map((row, i) => ({
     input: row,
-    output: outputData[i]
-}))
+    output: normOutput[0]
+}));
 
+console.log('trainData');
+console.log(trainData);
 net.train(trainData);
 
-const data = linearNormalize({ data: [ [36, 23, 10, 53, 04] ] });
+const data = linearNormalize({ data: [ [36, 23, 10, 53, 4] ], maxmin: maxminInput });
 
-const answer = linearDeNormalize(net.run(data));
+console.log('Search for solutions for');
+console.log(data);
 
+let answer = net.run(data[0]);
+
+console.log('ANSWER norm:');
+console.log(answer);
+
+answer = linearDeNormalize({ data: [answer], maxmin: maxminOutput });
+
+console.log('ANSWER de norm:');
 console.log(answer);
 
 ```
@@ -63,7 +77,7 @@ One way of non-linear normalization is using a sigmoid logistic function or a hy
 
 Example:
 ```
-const { nonLinearNormalize, nonLinearDeNormalize } = require('numnormolize');
+const { nonLinearNormalize, nonLinearDeNormalize, getMaxMin } = require('numnormolize');
 ```
 
 # Links

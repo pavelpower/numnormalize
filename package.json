@@ -25,5 +25,8 @@
   },
   "homepage": "https://github.com/pavelpower/numnormalize#readme",
   "dependencies": {},
-  "devDependencies": {}
+  "devDependencies": {
+    "brain.js": "^1.1.2",
+    "jest": "^22.4.3"
+  }
 }
