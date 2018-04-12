@@ -4,21 +4,13 @@
  * the data of one parameter is the STRING or COLUMN (param isCol) of the matrix
  *
  * @param data {Array<Array{Number}>} - matrix of numbers
- * @param isCol {boolean} - Normalization by row (false) or by column (true). default by row (isCol = false)
+ * @param maxmin {Array<{ max: Number, min: Number}>} - array of object with max min properties for each row data
  * default: normalizeInput
  */
-function linearNormalize({ data, isCol = false }) {
-    const callback = ({ max, min, vector, jMax }) => {
-        let j = jMax;
-        while(j >= 0) {
-            vector[j] = (vector[j] - min)/(max - min);
-            j--;
-        }
-    };
+function linearNormalize({ data, maxmin }) {
+    const callback = ({ max, min, el }) => (el - min)/(max - min);
 
-    enumeration(data, isCol, callback);
-
-    return data;
+    return enumeration(data, maxmin, callback);
 }
 
 /**
@@ -26,20 +18,12 @@ function linearNormalize({ data, isCol = false }) {
  * the data of one parameter is the STRING or COLUMN (param isCol) of the matrix
  *
  * @param data {Array<Array{Number}>} - matrix of numbers
- * @param isCol {boolean} - denormalization by row (false) or by column (true). default by row (isCol = false)
+ * @param maxmin {Array<{ max: Number, min: Number}>} - array of object with max min properties for each row data
  */
-function linearDeNormalize({ data, isCol = false }) {
-    const callback = ({ max, min, vector, jMax }) => {
-        let j = jMax;
-        while(j >= 0) {
-            vector[j] = min + vector[j] * (max - min);
-            j--;
-        }
-    };
+function linearDeNormalize({ data, maxmin }) {
+    const callback = ({ max, min, el }) => min + el * (max - min);
 
-    enumeration(data, isCol, callback);
-
-    return data;
+    return enumeration(data, maxmin, callback);
 }
 
 /**
@@ -52,22 +36,13 @@ function linearDeNormalize({ data, isCol = false }) {
  *
  * @function nonLinear.normalize
  * @param data {Array<Array{Number}>} - matrix of numbers
+ * @param maxmin {Array<{ max: Number, min: Number}>} - array of object with max min properties for each row data
  * @param a {number} - parameter determining the degree of nonlinearity, default: 1
- * @param isCol {boolean} - normalization by row (false) or by column (true). default by row (isCol = false)
  */
-function nonLinearNormalize({ data, a = 1, isCol = false }) {
-    const callback = ({ max, min, vector, jMax }) => {
-        let j = jMax;
-        let middle = (max - min) / 2;
-        while(j >= 0) {
-            vector[j] = 1 / (Math.exp(a * middle - a * vector[j]) + 1);
-            j--;
-        }
-    };
+function nonLinearNormalize({ data, maxmin, a = 1 }) {
+    const callback = ({ max, min, el }) => 1 / (Math.exp(a * ((max - min) / 2) - a * el) + 1);
 
-    enumeration(data, isCol, callback);
-
-    return data;
+    return enumeration(data, maxmin, callback);
 }
 
 /**
@@ -79,62 +54,98 @@ function nonLinearNormalize({ data, a = 1, isCol = false }) {
  * specify the width of the extrapolation corridor.
  *
  * @param data {Array<Array{Number}>} - matrix of numbers
+ * @param maxmin {Array<{ max: Number, min: Number}>} - array of object with max min properties for each row data
  * @param a {number} - parameter determining the degree of nonlinearity, default: 1
- * @param isCol {boolean} - denormalization by row (false) or by column (true). default by row (isCol = false)
  */
-function nonLinearDeNormalize({ data, a = 1, isCol = false }) {
-    const callback = ({ max, min, vector, jMax }) => {
-        let j = jMax;
-        let middle = (max - min) / 2;
-        while(j >= 0) {
-            vector[j] = middle - (1/a) * Math.log(1/vector[j] -1);
-            j--;
-        }
-    };
+function nonLinearDeNormalize({ data, maxmin, a = 1 }) {
+    const callback = ({ max, min, el }) => (max - min) / 2 - (1/a) * Math.log(1/el -1);
 
-    enumeration(data, isCol, callback);
-
-    return data;
+    return enumeration(data, maxmin, callback);
 }
 
+const transpose = m => m[0].map((x,i) => m.map(x => x[i]));
 
 /**
  * Enumeration of data
  *
  * @private
  * @param data {Array<Array{Number}>} - matrix of numbers
- * @param isCol {boolean} - Normalization by row (false) or by column (true). default by row (isCol = false)
+ * @param maxmin {Array<{ max: Number, min: Number}>|undefined} - array of object with max min properties for each row data
  * @param callback {function} - callback from circle by row Or col (the isCol parameter affects)
  */
-function enumeration(data, isCol = false, callback) {
-    const iMax = isCol ? data[0].length - 1 : data.length - 1;
-    const jMax = isCol ? data.length - 1 : data[0].length - 1 ;
+function enumeration(data, maxmin, callback) {
+    const rowMax = data.length - 1;
+    const colMax = data[0].length - 1;
+    const answer = generateMatrix(rowMax, colMax);
 
-    let i = iMax;
-    while(i >= 0) {
-        let max = 0;
-        let min = 0;
-
-        // Находим максимум и минимум по столбцу
-        let j = jMax;
-        while(j >= 0) {
-            max = data[i][j] > max ? data[i][j] : max;
-            min = data[i][j] < min ? data[i][j] : min;
-            j--;
+    let r = rowMax;
+    while(r >= 0) {
+        c = colMax;
+        while(c >= 0) {
+            answer[r][c] = callback({ ...maxmin[r], el: data[r][c] });
+            c--;
         }
-
-        callback({ max, min, vector: data[i], jMax });
-
-        i--;
+        r--;
     }
 
-    return data;
+    return answer;
 }
 
+/**
+ * Generate new matrix with 0 in value
+ * @param rows {Number}
+ * @param cols {Number}
+ * @returns {Array<Array<Number>>}
+ */
+function generateMatrix(rows, cols) {
+    const matrix = [];
+
+    let y = rows;
+    for (; y >= 0; y--) {
+        matrix[y] = [];
+        let x = cols;
+        for (;x >= 0; x--) {
+            matrix[y][x] = 0;
+        }
+    }
+    return matrix;
+}
+
+/**
+ * Get array of max/min values for row of Array
+ * @param data
+ * @returns {Array<{ max: Number, min: Number }>}
+ */
+function getMaxMin(data) {
+    const rowMax = data.length - 1;
+    const colMax = data[0].length - 1;
+    const answer = new Array(rowMax);
+
+    let r = rowMax;
+    while(r >= 0) {
+        let max;
+        let min;
+
+        // find max & min elements
+        let c = colMax;
+        while(c >= 0) {
+            let el = data[r][c];
+            max = (max !== undefined && el < max) ? max : el;
+            min = (min !== undefined && el > min) ? min : el;
+            c--;
+        }
+
+        answer[r] = { max, min };
+        r--;
+    }
+    return answer;
+}
 
 module.exports = {
     linearNormalize,
     linearDeNormalize,
     nonLinearNormalize,
-    nonLinearDeNormalize
+    nonLinearDeNormalize,
+    getMaxMin,
+    transpose
 };
